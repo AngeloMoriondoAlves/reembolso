@@ -32,9 +32,10 @@
   .foto-placeholder{display:flex;flex-direction:column;align-items:center;gap:10px;color:var(--muted)}
   .foto-placeholder svg{opacity:0.5}
   .foto-placeholder span{font-size:13px;font-weight:500}
-  #foto-overlay{position:absolute;inset:0;background:rgba(200,255,0,0.08);display:none;align-items:center;justify-content:center}
+  #foto-overlay{position:absolute;inset:0;background:rgba(200,255,0,0.08);display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px}
   #foto-overlay.active{display:flex}
   .ocr-spinner{width:40px;height:40px;border-radius:50%;border:3px solid var(--border);border-top-color:var(--accent);animation:spin 0.8s linear infinite}
+  .ocr-progress-text{font-family:var(--mono);font-size:11px;color:var(--accent);text-align:center;padding:0 20px}
   @keyframes spin{to{transform:rotate(360deg)}}
   #input-file{display:none}
   .fields{display:flex;flex-direction:column;gap:10px}
@@ -50,6 +51,7 @@
   #outra-wrap{display:none;margin-top:10px}
   .ocr-status{font-size:11px;color:var(--accent);font-family:var(--mono);padding:8px 12px;background:rgba(200,255,0,0.07);border-radius:8px;margin-top:10px;display:none}
   .ocr-status.show{display:block}
+  .ocr-status.erro{color:#ff6b6b;background:rgba(255,107,107,0.07)}
   .bottom-bar{position:fixed;bottom:0;left:0;right:0;z-index:200;background:rgba(10,10,15,0.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--border);padding:12px 16px;padding-bottom:max(12px,env(safe-area-inset-bottom));display:flex;gap:10px}
   .btn{flex:1;padding:15px;border-radius:14px;font-family:var(--font);font-size:14px;font-weight:700;border:none;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:8px}
   .btn:active{transform:scale(0.97)}
@@ -101,6 +103,7 @@
         <img id="foto-img" style="display:none" alt="Documento">
         <div id="foto-overlay">
           <div class="ocr-spinner"></div>
+          <div class="ocr-progress-text" id="ocr-progress">Carregando OCR...</div>
         </div>
       </div>
       <input type="file" id="input-file" accept="image/*" capture="environment" onchange="handleFoto(this)">
@@ -174,10 +177,10 @@
         <label>Selecionar empresa</label>
         <select id="f-empresa" onchange="handleEmpresa()">
           <option value="">Selecionar...</option>
-              <option value="Loges">Loges</option>
-              <option value="Loges Macaé">Loges Macaé</option>
-              <option value="Loges Viana">Loges Viana</option>
-              <option value="7Loges">7Loges</option>
+          <option value="Loges">Loges</option>
+          <option value="Loges Macaé">Loges Macaé</option>
+          <option value="Loges Viana">Loges Viana</option>
+          <option value="7Loges">7Loges</option>
           <option value="__outra__">Outra empresa...</option>
         </select>
         <div id="outra-wrap">
@@ -226,11 +229,13 @@
   </div>
 </div>
 
-<script>
-// ── CONFIG EMBUTIDA ──
-const CFG = {"nome":"Angelo Moriondo ALves","emailUsuario":"a.moriondolaves@gmail.com","empresas":[{"nome":"Loges","email":"a.moriondoalves@gmail.com"},{"nome":"Loges Macaé","email":"a.moriondoalves@gmail.com"},{"nome":"Loges Viana","email":"a.moriondoalves@gmail.com"},{"nome":"7Loges","email":"a.moriondoalves@gmail.com"}]};
+<!-- Tesseract.js via CDN -->
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
-// ── STATE ──
+<script>
+// ── CONFIG ──
+const CFG = {"nome":"Angelo Moriondo Alves","emailUsuario":"a.moriondolaves@gmail.com","empresas":[{"nome":"Loges","email":"a.moriondoalves@gmail.com"},{"nome":"Loges Macaé","email":"a.moriondoalves@gmail.com"},{"nome":"Loges Viana","email":"a.moriondoalves@gmail.com"},{"nome":"7Loges","email":"a.moriondoalves@gmail.com"}]};
+
 let fotoBase64 = null, fotoFile = null;
 
 // ── INIT ──
@@ -247,7 +252,8 @@ function handleFoto(input) {
   reader.onload = e => {
     fotoBase64 = e.target.result;
     const img = document.getElementById('foto-img');
-    img.src = fotoBase64; img.style.display = 'block';
+    img.src = fotoBase64;
+    img.style.display = 'block';
     document.getElementById('foto-placeholder').style.display = 'none';
     document.getElementById('foto-area').classList.add('pulse');
     runOCR(fotoBase64);
@@ -255,57 +261,127 @@ function handleFoto(input) {
   reader.readAsDataURL(file);
 }
 
+// ── OCR com Tesseract.js ──
 async function runOCR(base64) {
   const status = document.getElementById('ocr-status');
   const overlay = document.getElementById('foto-overlay');
-  status.textContent = '⟳ Lendo documento...';
-  status.classList.add('show');
-  overlay.classList.add('active');
-  const base64Data = base64.split(',')[1];
-  const mediaType = base64.split(';')[0].split(':')[1];
-  try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        messages: [{ role: 'user', content: [
-          { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64Data } },
-          { type: 'text', text: `Analise este documento fiscal/recibo e extraia APENAS os dados abaixo em JSON puro, sem markdown:\n{\n  "valor": "apenas números e vírgula, ex: 47,90",\n  "data": "formato YYYY-MM-DD",\n  "fornecedor": "nome do estabelecimento",\n  "cnpj": "formato 00.000.000/0000-00 ou vazio",\n  "cidade_uf": "Cidade/UF ou vazio",\n  "categoria": "uma de: Alimentação, Hospedagem, Passagem aérea, Táxi / Aplicativo, Combustível, Estacionamento, Pedágio, Despesa de representação, Outros",\n  "ndoc": "número do cupom ou NF ou vazio"\n}\nResponda SOMENTE com o JSON.` }
-        ]}]
-      })
-    });
-    const data = await res.json();
-    const text = data.content?.[0]?.text || '';
-    const parsed = JSON.parse(text.replace(/```json|```/g,'').trim());
-    preencherCampos(parsed);
-    status.textContent = '✓ Dados extraídos — confira abaixo';
-    showToast('Documento lido com sucesso');
-  } catch(e) {
-    status.textContent = '✗ Preencha os dados manualmente';
-  } finally { overlay.classList.remove('active'); }
-}
+  const progress = document.getElementById('ocr-progress');
 
-function preencherCampos(d) {
-  if (d.valor) { document.getElementById('f-valor').value = 'R$ ' + d.valor; mark('f-valor'); }
-  if (d.data) { document.getElementById('f-data').value = d.data; mark('f-data'); }
-  if (d.fornecedor) { document.getElementById('f-fornecedor').value = d.fornecedor; mark('f-fornecedor'); }
-  if (d.cnpj) { document.getElementById('f-cnpj').value = d.cnpj; mark('f-cnpj'); }
-  if (d.cidade_uf) { document.getElementById('f-cidade').value = d.cidade_uf; mark('f-cidade'); }
-  if (d.ndoc) { document.getElementById('f-ndoc').value = d.ndoc; mark('f-ndoc'); }
-  if (d.categoria) {
-    const sel = document.getElementById('f-categoria');
-    for (let o of sel.options) { if (o.text === d.categoria) { sel.value = o.value; break; } }
+  status.textContent = '⟳ Lendo documento...';
+  status.className = 'ocr-status show';
+  overlay.classList.add('active');
+
+  try {
+    const result = await Tesseract.recognize(base64, 'por', {
+      logger: m => {
+        if (m.status === 'recognizing text') {
+          progress.textContent = `Lendo... ${Math.round(m.progress * 100)}%`;
+        } else if (m.status === 'loading language traineddata') {
+          progress.textContent = 'Carregando idioma...';
+        } else if (m.status === 'initializing api') {
+          progress.textContent = 'Iniciando OCR...';
+        }
+      }
+    });
+
+    const texto = result.data.text;
+    extrairDados(texto);
+    status.textContent = '✓ Texto extraído — confira e corrija se necessário';
+    status.className = 'ocr-status show';
+    showToast('Documento lido!');
+  } catch(e) {
+    status.textContent = '✗ Não foi possível ler — preencha manualmente';
+    status.className = 'ocr-status show erro';
+    console.error(e);
+  } finally {
+    overlay.classList.remove('active');
   }
 }
-function mark(id) { document.getElementById(id).classList.add('filled'); }
 
-function handleEmpresa() {
-  const sel = document.getElementById('f-empresa');
-  document.getElementById('outra-wrap').style.display = sel.value === '__outra__' ? 'block' : 'none';
+// ── EXTRAÇÃO DE DADOS DO TEXTO OCR ──
+function extrairDados(texto) {
+  const linhas = texto.split('\n').map(l => l.trim()).filter(Boolean);
+  const txt = texto.toUpperCase();
+
+  // VALOR — busca padrões como R$ 47,90 ou 47.90 ou TOTAL 47,90
+  const valorMatch = texto.match(/(?:TOTAL|VALOR|R\$)\s*:?\s*R?\$?\s*(\d{1,6}[.,]\d{2})/i)
+    || texto.match(/R\$\s*(\d{1,6}[.,]\d{2})/i)
+    || texto.match(/(\d{1,6},\d{2})\s*$/m);
+  if (valorMatch) {
+    const v = valorMatch[1].replace('.', ',');
+    document.getElementById('f-valor').value = 'R$ ' + v;
+    mark('f-valor');
+  }
+
+  // DATA — DD/MM/AAAA ou DD/MM/AA
+  const dataMatch = texto.match(/(\d{2})\/(\d{2})\/(\d{2,4})/);
+  if (dataMatch) {
+    let [, d, m, a] = dataMatch;
+    if (a.length === 2) a = '20' + a;
+    document.getElementById('f-data').value = `${a}-${m}-${d}`;
+    mark('f-data');
+  }
+
+  // CNPJ — XX.XXX.XXX/XXXX-XX
+  const cnpjMatch = texto.match(/\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}/);
+  if (cnpjMatch) {
+    document.getElementById('f-cnpj').value = cnpjMatch[0];
+    mark('f-cnpj');
+  }
+
+  // Nº DOCUMENTO — COO, CCF, NF, SAT
+  const ndocMatch = texto.match(/(?:COO|CCF|NF|SAT|CUP|DOC)[^\d]*(\d{3,9})/i)
+    || texto.match(/N[Úú]M(?:ERO)?[^\d]*(\d{4,9})/i);
+  if (ndocMatch) {
+    document.getElementById('f-ndoc').value = ndocMatch[1];
+    mark('f-ndoc');
+  }
+
+  // FORNECEDOR — primeira linha não vazia que não seja número/data
+  for (const linha of linhas.slice(0, 8)) {
+    if (linha.length > 3 && !/^\d/.test(linha) && !/CNPJ|CPF|FONE|TEL/i.test(linha)) {
+      document.getElementById('f-fornecedor').value = linha;
+      mark('f-fornecedor');
+      break;
+    }
+  }
+
+  // CIDADE/UF — busca padrão Cidade - UF ou Cidade/UF
+  const cidadeMatch = texto.match(/([A-ZÀ-Ú][a-zà-ú]+(?: [A-ZÀ-Ú][a-zà-ú]+)*)\s*[-\/]\s*([A-Z]{2})\b/);
+  if (cidadeMatch) {
+    document.getElementById('f-cidade').value = cidadeMatch[1] + '/' + cidadeMatch[2];
+    mark('f-cidade');
+  }
+
+  // CATEGORIA por palavras-chave
+  const categorias = [
+    { nome: 'Hospedagem', palavras: ['HOTEL','POUSADA','HOSPEDAGEM','INN','RESORT'] },
+    { nome: 'Passagem aérea', palavras: ['AIRLINE','LATAM','GOL','AZUL','AVIANCA','PASSAGEM','AÉREA','EMBARQUE'] },
+    { nome: 'Táxi / Aplicativo', palavras: ['UBER','99','CABIFY','TÁXI','TAXI','IFOOD DRIVER'] },
+    { nome: 'Combustível', palavras: ['POSTO','COMBUSTÍVEL','GASOLINA','ETANOL','SHELL','IPIRANGA','BR DISTRIBUIDORA'] },
+    { nome: 'Estacionamento', palavras: ['ESTACION','PARKING','PARK'] },
+    { nome: 'Pedágio', palavras: ['PEDÁGIO','PEDAGIO','TOLL','AUTOBAN','ARTERIS'] },
+    { nome: 'Alimentação', palavras: ['RESTAURANTE','LANCHONETE','CAFE','CAFÉ','BAR ','PIZZ','BURGER','PADARIA','SNACK','FOOD'] },
+    { nome: 'Despesa de representação', palavras: ['REPRESENTAÇÃO','ENTRETENIMENTO'] },
+  ];
+  for (const cat of categorias) {
+    if (cat.palavras.some(p => txt.includes(p))) {
+      const sel = document.getElementById('f-categoria');
+      for (const o of sel.options) { if (o.text === cat.nome) { sel.value = o.value; break; } }
+      break;
+    }
+  }
 }
 
+function mark(id) { document.getElementById(id).classList.add('filled'); }
+
+// ── EMPRESA ──
+function handleEmpresa() {
+  document.getElementById('outra-wrap').style.display =
+    document.getElementById('f-empresa').value === '__outra__' ? 'block' : 'none';
+}
+
+// ── GERAR REEMBOLSO ──
 function gerarReembolso() {
   const selVal = document.getElementById('f-empresa').value;
   const empresa = selVal === '__outra__'
@@ -323,7 +399,8 @@ function gerarReembolso() {
   const ndoc   = document.getElementById('f-ndoc').value || '—';
 
   const subject = `Solicitação de Reembolso — ${empresa} — ${valor}`;
-  const body = `Solicito o reembolso da despesa abaixo, realizada em benefício da empresa indicada:
+  const body =
+`Solicito o reembolso da despesa abaixo, realizada em benefício da empresa indicada:
 
 Empresa debitada:      ${empresa}
 Data da despesa:       ${data}
@@ -342,11 +419,11 @@ ${CFG.nome}`;
   document.getElementById('prev-subject').textContent = subject;
   document.getElementById('prev-body').textContent = body;
   document.getElementById('modal-preview').classList.add('show');
-  // guarda para uso no compartilhar
   window._emailTo = emailFinanceiro;
   window._emailCc = CFG.emailUsuario;
 }
 
+// ── COMPARTILHAR ──
 async function compartilhar() {
   const subject = document.getElementById('prev-subject').textContent;
   const body    = document.getElementById('prev-body').textContent;
