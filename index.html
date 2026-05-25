@@ -10,11 +10,7 @@
 <title>Reembolso</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg:#0a0a0f;--surface:#13131a;--card:#1a1a24;--border:#2a2a38;
-    --accent:#c8ff00;--accent2:#00d4ff;--text:#f0f0f5;--muted:#6b6b80;
-    --radius:16px;--font:'Sora',sans-serif;--mono:'DM Mono',monospace;
-  }
+  :root{--bg:#0a0a0f;--surface:#13131a;--card:#1a1a24;--border:#2a2a38;--accent:#c8ff00;--accent2:#00d4ff;--text:#f0f0f5;--muted:#6b6b80;--radius:16px;--font:'Sora',sans-serif;--mono:'DM Mono',monospace}
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
   body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;min-height:-webkit-fill-available;overflow-x:hidden}
   .header{position:sticky;top:0;z-index:100;background:rgba(10,10,15,0.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:16px 20px 14px;display:flex;align-items:center;justify-content:space-between}
@@ -25,7 +21,16 @@
   .card-header{display:flex;align-items:center;gap:10px;padding:14px 16px 12px;border-bottom:1px solid var(--border)}
   .card-num{width:24px;height:24px;border-radius:50%;background:var(--accent);color:#000;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
   .card-title{font-size:13px;font-weight:600;letter-spacing:0.04em}
+  .card-subtitle{font-size:11px;color:var(--muted);margin-left:auto}
   .card-body{padding:16px}
+
+  /* BOTÕES DE MODO */
+  .mode-btns{display:flex;gap:8px;margin-bottom:14px}
+  .mode-btn{flex:1;padding:11px 8px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:6px}
+  .mode-btn.active{background:rgba(200,255,0,0.1);border-color:var(--accent);color:var(--accent)}
+  .mode-btn:active{transform:scale(0.97)}
+
+  /* FOTO */
   #foto-area{width:100%;aspect-ratio:4/3;background:var(--surface);border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;position:relative;border:2px dashed var(--border);cursor:pointer;transition:border-color 0.2s}
   #foto-area:active{border-color:var(--accent)}
   #foto-area img{width:100%;height:100%;object-fit:cover;border-radius:10px}
@@ -38,6 +43,27 @@
   .ocr-progress-text{font-family:var(--mono);font-size:11px;color:var(--accent);text-align:center;padding:0 20px}
   @keyframes spin{to{transform:rotate(360deg)}}
   #input-file{display:none}
+  #input-qr{display:none}
+
+  /* QR AREA */
+  #qr-area{display:none}
+  #qr-video-wrap{width:100%;aspect-ratio:4/3;background:#000;border-radius:12px;overflow:hidden;position:relative;border:2px solid var(--border)}
+  #qr-video{width:100%;height:100%;object-fit:cover}
+  .qr-frame{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+  .qr-box{width:60%;aspect-ratio:1;border:2px solid var(--accent);border-radius:8px;box-shadow:0 0 0 9999px rgba(0,0,0,0.5)}
+  #qr-manual{margin-top:10px}
+  .btn-cancelar{width:100%;margin-top:10px;padding:12px;border-radius:12px;border:1px solid rgba(255,107,107,0.3);background:rgba(255,107,107,0.07);color:#ff6b6b;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;display:none;align-items:center;justify-content:center;gap:8px;transition:all 0.15s}
+  .btn-cancelar.show{display:flex}
+  .btn-cancelar:active{transform:scale(0.97);background:rgba(255,107,107,0.15)}
+  .btn-refazer{width:100%;margin-top:10px;padding:12px;border-radius:12px;border:1px solid rgba(0,212,255,0.3);background:rgba(0,212,255,0.07);color:var(--accent2);font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;display:none;align-items:center;justify-content:center;gap:8px;transition:all 0.15s}
+  .btn-refazer.show{display:flex}
+  .btn-refazer:active{transform:scale(0.97)}
+
+  .ocr-status{font-size:11px;color:var(--accent);font-family:var(--mono);padding:8px 12px;background:rgba(200,255,0,0.07);border-radius:8px;margin-top:10px;display:none}
+  .ocr-status.show{display:block}
+  .ocr-status.erro{color:#ff6b6b;background:rgba(255,107,107,0.07)}
+  .ocr-status.info{color:var(--accent2);background:rgba(0,212,255,0.07)}
+
   .fields{display:flex;flex-direction:column;gap:10px}
   .field-row{display:flex;gap:10px}
   .field{flex:1}
@@ -49,14 +75,13 @@
   select option{background:#1a1a24}
   .value-input{font-family:var(--mono);font-size:20px;font-weight:500;color:var(--accent)}
   #outra-wrap{display:none;margin-top:10px}
-  .ocr-status{font-size:11px;color:var(--accent);font-family:var(--mono);padding:8px 12px;background:rgba(200,255,0,0.07);border-radius:8px;margin-top:10px;display:none}
-  .ocr-status.show{display:block}
-  .ocr-status.erro{color:#ff6b6b;background:rgba(255,107,107,0.07)}
+
   .bottom-bar{position:fixed;bottom:0;left:0;right:0;z-index:200;background:rgba(10,10,15,0.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--border);padding:12px 16px;padding-bottom:max(12px,env(safe-area-inset-bottom));display:flex;gap:10px}
   .btn{flex:1;padding:15px;border-radius:14px;font-family:var(--font);font-size:14px;font-weight:700;border:none;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:8px}
   .btn:active{transform:scale(0.97)}
   .btn-primary{background:var(--accent);color:#000}
   .btn-secondary{background:var(--card);color:var(--text);border:1px solid var(--border)}
+
   .modal-overlay{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:none;flex-direction:column;padding:20px 16px;padding-top:max(20px,env(safe-area-inset-top));padding-bottom:max(20px,env(safe-area-inset-bottom))}
   .modal-overlay.show{display:flex}
   .modal-card{background:var(--card);border:1px solid var(--border);border-radius:20px;flex:1;overflow:hidden;display:flex;flex-direction:column}
@@ -68,6 +93,7 @@
   .email-subject-label{font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
   .email-subject-text{font-family:var(--mono);font-size:13px;color:var(--accent2);margin-bottom:20px}
   .modal-footer{padding:14px 16px;padding-bottom:max(14px,env(safe-area-inset-bottom));border-top:1px solid var(--border);display:flex;gap:10px}
+
   .toast{position:fixed;top:80px;left:50%;transform:translateX(-50%);background:var(--card);border:1px solid var(--accent);color:var(--accent);font-size:13px;font-weight:600;padding:10px 20px;border-radius:100px;z-index:999;opacity:0;transition:opacity 0.3s;white-space:nowrap;pointer-events:none}
   .toast.show{opacity:1}
   @keyframes pulse-border{0%{border-color:var(--accent);box-shadow:0 0 0 0 rgba(200,255,0,0.4)}70%{box-shadow:0 0 0 8px rgba(200,255,0,0)}100%{border-color:var(--border);box-shadow:none}}
@@ -80,22 +106,53 @@
   <span class="header-title">Reembolso</span>
   <span class="header-user">Angelo</span>
 </div>
-
 <div class="toast" id="toast"></div>
 
 <div class="main">
 
+  <!-- STEP 1 -->
   <div class="card">
     <div class="card-header">
       <div class="card-num">1</div>
-      <span class="card-title">Fotografar Documento</span>
+      <span class="card-title">Documento</span>
+      <span class="card-subtitle">escolha o modo</span>
     </div>
     <div class="card-body">
-      <div id="foto-area" onclick="triggerCamera()">
+
+      <!-- MODO -->
+      <div class="mode-btns">
+        <button class="mode-btn active" id="btn-modo-qr" onclick="setModo('qr')">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.8"/><rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.8"/><rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.8"/><path stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M14 14h2M20 14v2M14 18h2M18 18h2M20 20v2"/></svg>
+          QR Code
+        </button>
+        <button class="mode-btn" id="btn-modo-foto" onclick="setModo('foto')">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4" stroke="currentColor" stroke-width="1.8"/></svg>
+          Foto + IA
+        </button>
+      </div>
+
+      <!-- QR MODE -->
+      <div id="qr-area">
+        <div id="qr-video-wrap">
+          <video id="qr-video" autoplay playsinline muted></video>
+          <div class="qr-frame"><div class="qr-box"></div></div>
+        </div>
+        <div style="margin-top:10px">
+          <label>Ou cole o link do QR Code manualmente</label>
+          <input type="url" id="qr-manual-input" placeholder="https://www.nfce.fazenda..." inputmode="url">
+          <button class="mode-btn" style="margin-top:8px;width:100%" onclick="processarQRManual()">Extrair dados do link</button>
+        </div>
+        <button class="btn-cancelar" id="btn-cancelar-qr" onclick="cancelarLeitura()">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M18 6L6 18M6 6l12 12"/></svg>
+          Cancelar leitura — voltar câmera
+        </button>
+      </div>
+
+      <!-- FOTO MODE -->
+      <div id="foto-area" style="display:none" onclick="triggerCamera()">
         <div class="foto-placeholder" id="foto-placeholder">
           <svg width="48" height="48" fill="none" viewBox="0 0 24 24">
-            <path stroke="#6b6b80" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
-              d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+            <path stroke="#6b6b80" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
             <circle cx="12" cy="13" r="4" stroke="#6b6b80" stroke-width="1.5"/>
           </svg>
           <span>Toque para fotografar</span>
@@ -103,14 +160,20 @@
         <img id="foto-img" style="display:none" alt="Documento">
         <div id="foto-overlay">
           <div class="ocr-spinner"></div>
-          <div class="ocr-progress-text" id="ocr-progress">Carregando OCR...</div>
+          <div class="ocr-progress-text" id="ocr-progress">Lendo documento...</div>
         </div>
       </div>
+
       <input type="file" id="input-file" accept="image/*" capture="environment" onchange="handleFoto(this)">
+      <button class="btn-refazer" id="btn-refazer-foto" onclick="refazFoto()">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M1 4v6h6M23 20v-6h-6"/><path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+        Cancelar — tirar outra foto
+      </button>
       <div class="ocr-status" id="ocr-status"></div>
     </div>
   </div>
 
+  <!-- STEP 2 -->
   <div class="card">
     <div class="card-header">
       <div class="card-num">2</div>
@@ -167,6 +230,7 @@
     </div>
   </div>
 
+  <!-- STEP 3 -->
   <div class="card">
     <div class="card-header">
       <div class="card-num">3</div>
@@ -194,11 +258,10 @@
 </div>
 
 <div class="bottom-bar">
-  <button class="btn btn-primary" onclick="gerarReembolso()">
-    Gerar Reembolso →
-  </button>
+  <button class="btn btn-primary" onclick="gerarReembolso()">Gerar Reembolso →</button>
 </div>
 
+<!-- MODAL E-MAIL -->
 <div class="modal-overlay" id="modal-preview">
   <div class="modal-card">
     <div class="modal-header">
@@ -212,36 +275,161 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="copiarTexto()" style="flex:0 0 auto;padding:15px 18px">
-        <svg width="16" height="16" fill="none" viewBox="0 0 24 24">
-          <rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="1.8"/>
-          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-        </svg>
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
         Copiar
       </button>
       <button class="btn btn-primary" onclick="compartilhar()">
-        <svg width="16" height="16" fill="none" viewBox="0 0 24 24">
-          <path stroke="#000" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
-            d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/>
-        </svg>
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="#000" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>
         Compartilhar / Enviar
       </button>
     </div>
   </div>
 </div>
 
-<!-- Tesseract.js via CDN -->
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<!-- jsQR para leitura de QR Code -->
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 
 <script>
-// ── CONFIG ──
 const CFG = {"nome":"Angelo Moriondo Alves","emailUsuario":"a.moriondolaves@gmail.com","empresas":[{"nome":"Loges","email":"a.moriondoalves@gmail.com"},{"nome":"Loges Macaé","email":"a.moriondoalves@gmail.com"},{"nome":"Loges Viana","email":"a.moriondoalves@gmail.com"},{"nome":"7Loges","email":"a.moriondoalves@gmail.com"}]};
+const OPENAI_KEY = 'COLOQUE_SUA_CHAVE_AQUI';
 
 let fotoBase64 = null, fotoFile = null;
+let qrStream = null, qrInterval = null;
+let modoAtual = 'qr';
 
-// ── INIT ──
 document.getElementById('f-data').value = new Date().toISOString().split('T')[0];
 
-// ── CAMERA ──
+// ── MODO ──
+function setModo(modo) {
+  modoAtual = modo;
+  document.getElementById('btn-modo-qr').classList.toggle('active', modo === 'qr');
+  document.getElementById('btn-modo-foto').classList.toggle('active', modo === 'foto');
+  document.getElementById('qr-area').style.display = modo === 'qr' ? 'block' : 'none';
+  document.getElementById('foto-area').style.display = modo === 'foto' ? 'flex' : 'none';
+  if (modo === 'qr') iniciarCamera();
+  else pararCamera();
+}
+
+// ── QR CODE — câmera ──
+async function iniciarCamera() {
+  try {
+    qrStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 960 } }
+    });
+    const video = document.getElementById('qr-video');
+    video.srcObject = qrStream;
+    await video.play();
+    qrInterval = setInterval(scanQR, 300);
+  } catch(e) {
+    setStatus('Câmera não disponível. Use o campo manual abaixo.', 'info');
+  }
+}
+
+function pararCamera() {
+  if (qrInterval) { clearInterval(qrInterval); qrInterval = null; }
+  if (qrStream) { qrStream.getTracks().forEach(t => t.stop()); qrStream = null; }
+}
+
+// ── CANCELAR LEITURA QR — volta câmera ──
+function cancelarLeitura() {
+  pararCamera();
+  // limpa campos preenchidos pelo QR
+  ['f-cnpj','f-ndoc','f-cidade'].forEach(id => {
+    const el = document.getElementById(id);
+    el.value = ''; el.classList.remove('filled');
+  });
+  document.getElementById('qr-manual-input').value = '';
+  document.getElementById('btn-cancelar-qr').classList.remove('show');
+  setStatus('', '');
+  // reinicia câmera
+  iniciarCamera();
+  showToast('Câmera reiniciada');
+}
+
+// ── REFAZER FOTO ──
+function refazFoto() {
+  // reseta imagem
+  const img = document.getElementById('foto-img');
+  img.src = ''; img.style.display = 'none';
+  document.getElementById('foto-placeholder').style.display = 'flex';
+  document.getElementById('foto-area').classList.remove('pulse');
+  document.getElementById('btn-refazer-foto').classList.remove('show');
+  // limpa campos
+  ['f-valor','f-data','f-fornecedor','f-cnpj','f-cidade','f-ndoc'].forEach(id => {
+    const el = document.getElementById(id);
+    el.value = ''; el.classList.remove('filled');
+  });
+  document.getElementById('f-categoria').value = '';
+  document.getElementById('f-data').value = new Date().toISOString().split('T')[0];
+  fotoBase64 = null; fotoFile = null;
+  setStatus('', '');
+  // dispara câmera novamente
+  document.getElementById('input-file').value = '';
+  document.getElementById('input-file').click();
+}
+
+function scanQR() {
+  const video = document.getElementById('qr-video');
+  if (video.readyState !== video.HAVE_ENOUGH_DATA) return;
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0);
+  const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const code = jsQR(imgData.data, imgData.width, imgData.height, { inversionAttempts: 'dontInvert' });
+  if (code && code.data) {
+    pararCamera();
+    processarQRUrl(code.data);
+  }
+}
+
+function processarQRManual() {
+  const url = document.getElementById('qr-manual-input').value.trim();
+  if (!url) { showToast('Cole o link do QR Code'); return; }
+  processarQRUrl(url);
+}
+
+// ── EXTRAIR DADOS DA URL DA SEFAZ ──
+function processarQRUrl(url) {
+  setStatus('⟳ Lendo QR Code...', 'show');
+  showToast('QR Code lido!');
+
+  try {
+    // Chave de acesso — 44 dígitos
+    const chaveMatch = url.match(/[?&](?:chNFe|cDest|p)=([0-9]{44})/i)
+      || url.match(/([0-9]{44})/);
+    if (chaveMatch) {
+      const chave = chaveMatch[1];
+      const cuf   = chave.substring(0, 2);
+      const aamm  = chave.substring(2, 6);
+      const cnpj  = chave.substring(6, 20);
+      const nNF   = chave.substring(25, 34);
+      const cnpjFmt = cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
+      const ano  = '20' + aamm.substring(0, 2);
+      const mes  = aamm.substring(2, 4);
+      const hoje = new Date();
+      const dia  = String(hoje.getDate()).padStart(2, '0');
+      document.getElementById('f-cnpj').value = cnpjFmt; mark('f-cnpj');
+      document.getElementById('f-ndoc').value = String(parseInt(nNF, 10)); mark('f-ndoc');
+      document.getElementById('f-data').value = `${ano}-${mes}-${dia}`; mark('f-data');
+      const ufs = {'11':'RO','12':'AC','13':'AM','14':'RR','15':'PA','16':'AP','17':'TO','21':'MA','22':'PI','23':'CE','24':'RN','25':'PB','26':'PE','27':'AL','28':'SE','29':'BA','31':'MG','32':'ES','33':'RJ','35':'SP','41':'PR','42':'SC','43':'RS','50':'MS','51':'MT','52':'GO','53':'DF'};
+      if (ufs[cuf]) { document.getElementById('f-cidade').value = ufs[cuf]; mark('f-cidade'); }
+    }
+    const valorMatch = url.match(/[?&](?:vNF|vTotBruto|nVTot)=([0-9]+(?:[.,][0-9]{1,2})?)/i);
+    if (valorMatch) {
+      const v = valorMatch[1].replace('.', ',');
+      document.getElementById('f-valor').value = 'R$ ' + v; mark('f-valor');
+    }
+    setStatus('✓ Dados extraídos do QR Code — confira e complete', 'show');
+    document.getElementById('btn-cancelar-qr').classList.add('show');
+  } catch(e) {
+    setStatus('✗ Não foi possível ler o QR Code — preencha manualmente', 'erro');
+    document.getElementById('btn-cancelar-qr').classList.add('show');
+  }
+}
+
+// ── FOTO + IA ──
 function triggerCamera() { document.getElementById('input-file').click(); }
 
 function handleFoto(input) {
@@ -252,8 +440,7 @@ function handleFoto(input) {
   reader.onload = e => {
     fotoBase64 = e.target.result;
     const img = document.getElementById('foto-img');
-    img.src = fotoBase64;
-    img.style.display = 'block';
+    img.src = fotoBase64; img.style.display = 'block';
     document.getElementById('foto-placeholder').style.display = 'none';
     document.getElementById('foto-area').classList.add('pulse');
     runOCR(fotoBase64);
@@ -261,119 +448,56 @@ function handleFoto(input) {
   reader.readAsDataURL(file);
 }
 
-// ── OCR com Tesseract.js ──
 async function runOCR(base64) {
-  const status = document.getElementById('ocr-status');
   const overlay = document.getElementById('foto-overlay');
-  const progress = document.getElementById('ocr-progress');
-
-  status.textContent = '⟳ Lendo documento...';
-  status.className = 'ocr-status show';
+  setStatus('⟳ Lendo com IA...', 'show');
   overlay.classList.add('active');
-
+  const base64Data = base64.split(',')[1];
+  const mediaType  = base64.split(';')[0].split(':')[1];
   try {
-    const result = await Tesseract.recognize(base64, 'por', {
-      logger: m => {
-        if (m.status === 'recognizing text') {
-          progress.textContent = `Lendo... ${Math.round(m.progress * 100)}%`;
-        } else if (m.status === 'loading language traineddata') {
-          progress.textContent = 'Carregando idioma...';
-        } else if (m.status === 'initializing api') {
-          progress.textContent = 'Iniciando OCR...';
-        }
-      }
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${OPENAI_KEY}` },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini', max_tokens: 500,
+        messages: [{ role: 'user', content: [
+          { type: 'image_url', image_url: { url: `data:${mediaType};base64,${base64Data}` } },
+          { type: 'text', text: 'Analise este documento fiscal brasileiro e extraia APENAS os dados abaixo em JSON puro, sem markdown:\n{\n  "valor": "apenas números e vírgula, ex: 47,90",\n  "data": "formato YYYY-MM-DD",\n  "fornecedor": "nome do estabelecimento",\n  "cnpj": "formato 00.000.000/0000-00 ou vazio",\n  "cidade_uf": "Cidade/UF ou vazio",\n  "categoria": "uma de: Alimentação, Hospedagem, Passagem aérea, Táxi / Aplicativo, Combustível, Estacionamento, Pedágio, Despesa de representação, Outros",\n  "ndoc": "número do cupom ou NF ou vazio"\n}\nResponda SOMENTE com o JSON.' }
+        ]}]
+      })
     });
-
-    const texto = result.data.text;
-    extrairDados(texto);
-    status.textContent = '✓ Texto extraído — confira e corrija se necessário';
-    status.className = 'ocr-status show';
-    showToast('Documento lido!');
+    const data = await res.json();
+    const text = data.choices?.[0]?.message?.content || '';
+    const parsed = JSON.parse(text.replace(/```json|```/g,'').trim());
+    preencherCampos(parsed);
+    setStatus('✓ Dados extraídos pela IA — confira abaixo', 'show');
+    document.getElementById('btn-refazer-foto').classList.add('show');
+    showToast('Documento lido com sucesso!');
   } catch(e) {
-    status.textContent = '✗ Não foi possível ler — preencha manualmente';
-    status.className = 'ocr-status show erro';
-    console.error(e);
-  } finally {
-    overlay.classList.remove('active');
-  }
+    setStatus('✗ Falha na leitura — preencha manualmente', 'erro');
+    document.getElementById('btn-refazer-foto').classList.add('show');
+  } finally { overlay.classList.remove('active'); }
 }
 
-// ── EXTRAÇÃO DE DADOS DO TEXTO OCR ──
-function extrairDados(texto) {
-  const linhas = texto.split('\n').map(l => l.trim()).filter(Boolean);
-  const txt = texto.toUpperCase();
-
-  // VALOR — busca padrões como R$ 47,90 ou 47.90 ou TOTAL 47,90
-  const valorMatch = texto.match(/(?:TOTAL|VALOR|R\$)\s*:?\s*R?\$?\s*(\d{1,6}[.,]\d{2})/i)
-    || texto.match(/R\$\s*(\d{1,6}[.,]\d{2})/i)
-    || texto.match(/(\d{1,6},\d{2})\s*$/m);
-  if (valorMatch) {
-    const v = valorMatch[1].replace('.', ',');
-    document.getElementById('f-valor').value = 'R$ ' + v;
-    mark('f-valor');
-  }
-
-  // DATA — DD/MM/AAAA ou DD/MM/AA
-  const dataMatch = texto.match(/(\d{2})\/(\d{2})\/(\d{2,4})/);
-  if (dataMatch) {
-    let [, d, m, a] = dataMatch;
-    if (a.length === 2) a = '20' + a;
-    document.getElementById('f-data').value = `${a}-${m}-${d}`;
-    mark('f-data');
-  }
-
-  // CNPJ — XX.XXX.XXX/XXXX-XX
-  const cnpjMatch = texto.match(/\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}/);
-  if (cnpjMatch) {
-    document.getElementById('f-cnpj').value = cnpjMatch[0];
-    mark('f-cnpj');
-  }
-
-  // Nº DOCUMENTO — COO, CCF, NF, SAT
-  const ndocMatch = texto.match(/(?:COO|CCF|NF|SAT|CUP|DOC)[^\d]*(\d{3,9})/i)
-    || texto.match(/N[Úú]M(?:ERO)?[^\d]*(\d{4,9})/i);
-  if (ndocMatch) {
-    document.getElementById('f-ndoc').value = ndocMatch[1];
-    mark('f-ndoc');
-  }
-
-  // FORNECEDOR — primeira linha não vazia que não seja número/data
-  for (const linha of linhas.slice(0, 8)) {
-    if (linha.length > 3 && !/^\d/.test(linha) && !/CNPJ|CPF|FONE|TEL/i.test(linha)) {
-      document.getElementById('f-fornecedor').value = linha;
-      mark('f-fornecedor');
-      break;
-    }
-  }
-
-  // CIDADE/UF — busca padrão Cidade - UF ou Cidade/UF
-  const cidadeMatch = texto.match(/([A-ZÀ-Ú][a-zà-ú]+(?: [A-ZÀ-Ú][a-zà-ú]+)*)\s*[-\/]\s*([A-Z]{2})\b/);
-  if (cidadeMatch) {
-    document.getElementById('f-cidade').value = cidadeMatch[1] + '/' + cidadeMatch[2];
-    mark('f-cidade');
-  }
-
-  // CATEGORIA por palavras-chave
-  const categorias = [
-    { nome: 'Hospedagem', palavras: ['HOTEL','POUSADA','HOSPEDAGEM','INN','RESORT'] },
-    { nome: 'Passagem aérea', palavras: ['AIRLINE','LATAM','GOL','AZUL','AVIANCA','PASSAGEM','AÉREA','EMBARQUE'] },
-    { nome: 'Táxi / Aplicativo', palavras: ['UBER','99','CABIFY','TÁXI','TAXI','IFOOD DRIVER'] },
-    { nome: 'Combustível', palavras: ['POSTO','COMBUSTÍVEL','GASOLINA','ETANOL','SHELL','IPIRANGA','BR DISTRIBUIDORA'] },
-    { nome: 'Estacionamento', palavras: ['ESTACION','PARKING','PARK'] },
-    { nome: 'Pedágio', palavras: ['PEDÁGIO','PEDAGIO','TOLL','AUTOBAN','ARTERIS'] },
-    { nome: 'Alimentação', palavras: ['RESTAURANTE','LANCHONETE','CAFE','CAFÉ','BAR ','PIZZ','BURGER','PADARIA','SNACK','FOOD'] },
-    { nome: 'Despesa de representação', palavras: ['REPRESENTAÇÃO','ENTRETENIMENTO'] },
-  ];
-  for (const cat of categorias) {
-    if (cat.palavras.some(p => txt.includes(p))) {
-      const sel = document.getElementById('f-categoria');
-      for (const o of sel.options) { if (o.text === cat.nome) { sel.value = o.value; break; } }
-      break;
-    }
+function preencherCampos(d) {
+  if (d.valor) { document.getElementById('f-valor').value = 'R$ ' + d.valor; mark('f-valor'); }
+  if (d.data) { document.getElementById('f-data').value = d.data; mark('f-data'); }
+  if (d.fornecedor) { document.getElementById('f-fornecedor').value = d.fornecedor; mark('f-fornecedor'); }
+  if (d.cnpj) { document.getElementById('f-cnpj').value = d.cnpj; mark('f-cnpj'); }
+  if (d.cidade_uf) { document.getElementById('f-cidade').value = d.cidade_uf; mark('f-cidade'); }
+  if (d.ndoc) { document.getElementById('f-ndoc').value = d.ndoc; mark('f-ndoc'); }
+  if (d.categoria) {
+    const sel = document.getElementById('f-categoria');
+    for (const o of sel.options) { if (o.text === d.categoria) { sel.value = o.value; break; } }
   }
 }
 
 function mark(id) { document.getElementById(id).classList.add('filled'); }
+function setStatus(msg, tipo) {
+  const s = document.getElementById('ocr-status');
+  s.textContent = msg;
+  s.className = 'ocr-status ' + (tipo || 'show');
+}
 
 // ── EMPRESA ──
 function handleEmpresa() {
@@ -384,11 +508,8 @@ function handleEmpresa() {
 // ── GERAR REEMBOLSO ──
 function gerarReembolso() {
   const selVal = document.getElementById('f-empresa').value;
-  const empresa = selVal === '__outra__'
-    ? document.getElementById('f-outra').value.trim()
-    : selVal;
+  const empresa = selVal === '__outra__' ? document.getElementById('f-outra').value.trim() : selVal;
   if (!empresa) { showToast('Selecione a empresa'); return; }
-
   const emailFinanceiro = CFG.empresas.find(e => e.nome === empresa)?.email || '';
   const valor  = document.getElementById('f-valor').value || '—';
   const data   = fmtDate(document.getElementById('f-data').value);
@@ -397,7 +518,6 @@ function gerarReembolso() {
   const cidade = document.getElementById('f-cidade').value || '—';
   const cat    = document.getElementById('f-categoria').value || '—';
   const ndoc   = document.getElementById('f-ndoc').value || '—';
-
   const subject = `Solicitação de Reembolso — ${empresa} — ${valor}`;
   const body =
 `Solicito o reembolso da despesa abaixo, realizada em benefício da empresa indicada:
@@ -415,7 +535,6 @@ Segue anexo o documento fiscal correspondente.
 
 Atenciosamente,
 ${CFG.nome}`;
-
   document.getElementById('prev-subject').textContent = subject;
   document.getElementById('prev-body').textContent = body;
   document.getElementById('modal-preview').classList.add('show');
@@ -423,13 +542,10 @@ ${CFG.nome}`;
   window._emailCc = CFG.emailUsuario;
 }
 
-// ── COMPARTILHAR ──
 async function compartilhar() {
   const subject = document.getElementById('prev-subject').textContent;
   const body    = document.getElementById('prev-body').textContent;
-  const to      = window._emailTo || '';
-  const cc      = window._emailCc || '';
-
+  const to = window._emailTo || '', cc = window._emailCc || '';
   if (navigator.share && fotoFile) {
     try { await navigator.share({ title: subject, text: body, files: [fotoFile] }); return; } catch(e) {}
   }
@@ -446,6 +562,9 @@ function copiarTexto() {
 function closeModal() { document.getElementById('modal-preview').classList.remove('show'); }
 function fmtDate(iso) { if (!iso) return '—'; const [y,m,d]=iso.split('-'); return `${d}/${m}/${y}`; }
 function showToast(msg) { const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500); }
+
+// Iniciar no modo QR
+window.addEventListener('load', () => setModo('qr'));
 </script>
 </body>
 </html>
